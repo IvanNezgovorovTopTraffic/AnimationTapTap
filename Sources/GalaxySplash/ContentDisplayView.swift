@@ -215,38 +215,38 @@ public struct ContentDisplayView: UIViewRepresentable {
                 
                 // Проверяем, это popup WebView?
                 if popupControllers[webView] != nil {
-                    print("🪟 [POLICY] Это popup WebView, разрешаем навигацию внутри него")
+                  
                     // Popup WebView может свободно навигировать
                     // НЕ перенаправляем в главный WebView!
                 }
                 
                 // Legacy: Если это старый временный WebView - перехватываем URL
                 else if webView == oauthWebView {
-                    print("🔍 [POLICY] Это старый временный WebView! URL: \(urlString)")
+                    
                     if !urlString.isEmpty && 
                        urlString != "about:blank" &&
                        !urlString.hasPrefix("about:") {
-                        print("✅ [POLICY] URL валидный! Переносим в основной WebView и отменяем навигацию")
+                       
                         // Загружаем в основной WebView
                         if let mainWebView = galaxyWVView {
                             mainWebView.load(URLRequest(url: url))
                             oauthWebView = nil
-                            print("🔄 [POLICY] Временный WebView уничтожен (oauthWebView = nil)")
+                            
                         }
                         decisionHandler(.cancel)
                         return
                     } else {
-                        print("⏭️ [POLICY] URL игнорируется (пустой или about:), разрешаем навигацию")
+                      
                     }
                 }
                 
                 let scheme = url.scheme?.lowercased()
-                print("🔗 [POLICY] Scheme: \(scheme ?? "nil")")
+               
                 
                 // Открываем внешние схемы в системе
                 if let scheme = scheme,
                    scheme != "http", scheme != "https", scheme != "about" {
-                    print("🌐 [POLICY] Внешняя схема '\(scheme)', открываем в системе")
+                    
                     UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     decisionHandler(.cancel)
                     return
@@ -254,15 +254,14 @@ public struct ContentDisplayView: UIViewRepresentable {
                 
                 // OAuth popup - загружаем в том же WebView (со свайпом назад)
                 if action.targetFrame == nil {
-                    print("🪟 [POLICY] targetFrame = nil (popup), загружаем в текущем WebView")
+                    
                     webView.load(URLRequest(url: url))
                     decisionHandler(.cancel)
                     return
                 }
             }
             
-            print("✅ [POLICY] Разрешаем навигацию (.allow)")
-            print("📋 [POLICY] ========================================")
+           
             decisionHandler(.allow)
         }
         
@@ -272,17 +271,7 @@ public struct ContentDisplayView: UIViewRepresentable {
                             for navAction: WKNavigationAction,
                             windowFeatures: WKWindowFeatures) -> WKWebView? {
             
-            print("🪟 [POPUP] ========================================")
-            print("🪟 [POPUP] Попытка открыть новое окно")
-            print("🪟 [POPUP] URL: \(navAction.request.url?.absoluteString ?? "nil")")
-            print("🪟 [POPUP] HTTP Method: \(navAction.request.httpMethod ?? "nil")")
-            print("🪟 [POPUP] Has HTTP Body: \(navAction.request.httpBody != nil)")
-            print("🪟 [POPUP] targetFrame: \(navAction.targetFrame == nil ? "nil" : "exists")")
-            print("🪟 [POPUP] navigationType: \(navAction.navigationType.rawValue)")
-            print("🪟 [POPUP] ========================================")
-            
-            // Создаем НОВЫЙ ВИДИМЫЙ WebView для popup
-            print("🔧 [POPUP] Создаем модальный popup WebView")
+           
             
             // Настраиваем конфигурацию для popup
             configuration.websiteDataStore = WKWebsiteDataStore.default()
@@ -302,7 +291,7 @@ public struct ContentDisplayView: UIViewRepresentable {
             
             // Сохраняем ссылку на popup
             popupControllers[popupWebView] = popupController
-            print("💾 [POPUP] Popup сохранен в словаре. Всего popup'ов: \(popupControllers.count)")
+            
             
             // Показываем модально
             DispatchQueue.main.async { [weak self] in
@@ -310,7 +299,7 @@ public struct ContentDisplayView: UIViewRepresentable {
                       let windowScene = UIApplication.shared.connectedScenes
                         .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
                       let rootVC = windowScene.windows.first?.rootViewController else {
-                    print("❌ [POPUP] Не удалось найти rootViewController")
+                    
                     return
                 }
                 
@@ -320,9 +309,9 @@ public struct ContentDisplayView: UIViewRepresentable {
                     topVC = presented
                 }
                 
-                print("🎬 [POPUP] Показываем popup модально")
+                
                 topVC.present(popupController, animated: true) {
-                    print("✅ [POPUP] Popup успешно показан")
+                   
                 }
             }
             
@@ -330,7 +319,7 @@ public struct ContentDisplayView: UIViewRepresentable {
             if let url = navAction.request.url,
                !url.absoluteString.isEmpty,
                url.absoluteString != "about:blank" {
-                print("🔗 [POPUP] Загружаем URL в popup: \(url.absoluteString)")
+               
                 popupWebView.load(navAction.request)
             }
             
@@ -339,24 +328,21 @@ public struct ContentDisplayView: UIViewRepresentable {
         
         // Закрытие временного WebView
         public func webViewDidClose(_ webView: WKWebView) {
-            print("❌ [CLOSE] ========================================")
-            print("❌ [CLOSE] JavaScript вызвал window.close()")
-            print("❌ [CLOSE] URL перед закрытием: \(webView.url?.absoluteString ?? "nil")")
-            print("❌ [CLOSE] Это popup WebView?: \(popupControllers[webView] != nil)")
+            
             
             // Проверяем, это popup WebView?
             if let popupController = popupControllers[webView] {
-                print("🔧 [CLOSE] Закрываем popup контроллер")
+               
                 popupController.closePopup()
             }
             
             // Legacy: старый механизм для временного WebView
             if webView == oauthWebView {
                 oauthWebView = nil
-                print("🗑️ [CLOSE] Временный WebView уничтожен (oauthWebView = nil)")
+               
             }
             
-            print("❌ [CLOSE] ========================================")
+            
         }
         
         // MARK: -- Popup Management Functions
@@ -365,84 +351,60 @@ public struct ContentDisplayView: UIViewRepresentable {
         func popupDidClose(_ webView: WKWebView?) {
             guard let webView = webView else { return }
             
-            print("🗑️ [POPUP CLOSE] Удаляем popup из словаря")
+           
             popupControllers.removeValue(forKey: webView)
-            print("📊 [POPUP CLOSE] Осталось popup'ов: \(popupControllers.count)")
+           
         }
         
         // Обработка начала навигации
         public func webView(_ galaxyWebView: WKWebView, didStartProvisionalNavigation galaxyNavigation: WKNavigation!) {
-            print("🚀 [NAV START] ========================================")
-            print("🚀 [NAV START] Началась навигация")
-            print("🚀 [NAV START] URL: \(galaxyWebView.url?.absoluteString ?? "nil")")
-            print("🚀 [NAV START] Это временный WebView?: \(galaxyWebView == oauthWebView)")
-            print("🚀 [NAV START] Это popup WebView?: \(popupControllers[galaxyWebView] != nil)")
-            print("🚀 [NAV START] Это главный WebView?: \(galaxyWebView == galaxyWVView)")
+            
             
             // Если это popup WebView - не перехватываем, пусть работает самостоятельно
             if popupControllers[galaxyWebView] != nil {
-                print("🪟 [NAV START] Popup WebView навигирует самостоятельно")
-                print("🚀 [NAV START] ========================================")
+               
                 return
             }
             
             // Legacy: Если это старый временный WebView - перехватываем URL
             if galaxyWebView == oauthWebView, let realUrl = galaxyWebView.url {
                 let urlString = realUrl.absoluteString
-                print("🔍 [NAV START] Проверяем URL временного WebView: \(urlString)")
+               
                 
                 // Игнорируем пустые URL и about:blank
                 if !urlString.isEmpty && 
                    urlString != "about:blank" &&
                    !urlString.hasPrefix("about:") {
-                    print("✅ [NAV START] URL валидный! Переносим в основной WebView")
+                   
                     // Загружаем в основной WebView
                     if let mainWebView = galaxyWVView {
                         mainWebView.load(URLRequest(url: realUrl))
                         oauthWebView = nil
-                        print("🔄 [NAV START] Временный WebView уничтожен (oauthWebView = nil)")
+                        
                     }
                     return
                 } else {
-                    print("⏭️ [NAV START] URL игнорируется (пустой или about:)")
+                    
                 }
             }
-            print("🚀 [NAV START] ========================================")
+           
         }
         
         // Обработка завершения загрузки
         public func webView(_ galaxyWebView: WKWebView, didFinish galaxyNavigation: WKNavigation!) {
-            print("✅ [FINISH] ========================================")
-            print("✅ [FINISH] Загрузка завершена")
-            print("✅ [FINISH] URL: \(galaxyWebView.url?.absoluteString ?? "nil")")
-            print("✅ [FINISH] Это временный WebView?: \(galaxyWebView == oauthWebView)")
-            print("✅ [FINISH] Это popup WebView?: \(popupControllers[galaxyWebView] != nil)")
-            print("✅ [FINISH] Это главный WebView?: \(galaxyWebView == galaxyWVView)")
-            print("✅ [FINISH] ========================================")
+            
             galaxyRefreshControl?.endRefreshing()
         }
         
         // Обработка ошибок загрузки
         public func webView(_ galaxyWebView: WKWebView, didFail galaxyNavigation: WKNavigation!, withError galaxyError: Error) {
-            print("❌ [ERROR] ========================================")
-            print("❌ [ERROR] Ошибка при загрузке")
-            print("❌ [ERROR] URL: \(galaxyWebView.url?.absoluteString ?? "nil")")
-            print("❌ [ERROR] Error: \(galaxyError.localizedDescription)")
-            print("❌ [ERROR] Это временный WebView?: \(galaxyWebView == oauthWebView)")
-            print("❌ [ERROR] Это popup WebView?: \(popupControllers[galaxyWebView] != nil)")
-            print("❌ [ERROR] ========================================")
+           
             galaxyRefreshControl?.endRefreshing()
         }
         
         // Обработка ошибок загрузки (провизорная навигация)
         public func webView(_ galaxyWebView: WKWebView, didFailProvisionalNavigation galaxyNavigation: WKNavigation!, withError galaxyError: Error) {
-            print("⚠️ [ERROR PROV] ========================================")
-            print("⚠️ [ERROR PROV] Ошибка при провизорной навигации")
-            print("⚠️ [ERROR PROV] URL: \(galaxyWebView.url?.absoluteString ?? "nil")")
-            print("⚠️ [ERROR PROV] Error: \(galaxyError.localizedDescription)")
-            print("⚠️ [ERROR PROV] Это временный WebView?: \(galaxyWebView == oauthWebView)")
-            print("⚠️ [ERROR PROV] Это popup WebView?: \(popupControllers[galaxyWebView] != nil)")
-            print("⚠️ [ERROR PROV] ========================================")
+            
         }
     }
 }
